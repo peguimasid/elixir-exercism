@@ -9,13 +9,13 @@ defmodule LibraryFees do
 
   def return_date(checkout_datetime) do
     days_to_add = if before_noon?(checkout_datetime), do: 28, else: 29
-    return_date = NaiveDateTime.add(checkout_datetime, days_to_add, :day)
-    NaiveDateTime.to_date(return_date)
+    Date.add(checkout_datetime, days_to_add)
   end
 
   def days_late(planned_return_date, actual_return_datetime) do
-    diff = Date.diff(actual_return_datetime, planned_return_date)
-    max(diff, 0)
+    actual_return_datetime
+    |> Date.diff(planned_return_date)
+    |> max(0)
   end
 
   def monday?(datetime) do
