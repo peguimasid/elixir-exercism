@@ -9,9 +9,9 @@ defmodule LucasNumbers do
   def generate(2), do: [2, 1]
 
   def generate(count) when is_integer(count) and count >= 1 do
-    Stream.iterate({2, 1}, fn {a, b} -> {b, a + b} end)
+    {2, 1}
+    |> Stream.unfold(fn {a, b} -> {a, {b, a + b}} end)
     |> Enum.take(count)
-    |> Enum.map(fn {a, _b} -> a end)
   end
 
   def generate(_) do
