@@ -21,13 +21,13 @@ defmodule DancingDots.Flicker do
   use DancingDots.Animation
 
   @impl DancingDots.Animation
-  def handle_frame(%DancingDots.Dot{opacity: opacity} = dot, frame_number, _opts)
-      when rem(frame_number, 4) === 0 do
-    %DancingDots.Dot{dot | opacity: opacity / 2}
+  def handle_frame(dot, frame_number, _opts) do
+    if rem(frame_number, 4) === 0 do
+      %{dot | opacity: dot.opacity / 2}
+    else
+      dot
+    end
   end
-
-  @impl DancingDots.Animation
-  def handle_frame(dot, _frame_number, _opts), do: dot
 end
 
 defmodule DancingDots.Zoom do
@@ -46,9 +46,7 @@ defmodule DancingDots.Zoom do
   end
 
   @impl DancingDots.Animation
-  def handle_frame(%DancingDots.Dot{radius: radius} = dot, frame_number, opts) do
-    velocity = Keyword.get(opts, :velocity)
-
-    %DancingDots.Dot{dot | radius: radius + (frame_number - 1) * velocity}
+  def handle_frame(dot, frame_number, opts) do
+    %{dot | radius: dot.radius + (frame_number - 1) * opts[:velocity]}
   end
 end
