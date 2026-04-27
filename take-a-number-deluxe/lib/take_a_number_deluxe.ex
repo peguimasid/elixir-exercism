@@ -42,34 +42,39 @@ defmodule TakeANumberDeluxe do
 
   # Server callbacks
 
+  @impl GenServer
   def init(init_arg) do
-    {:ok, init_arg}
+    {:ok, init_arg, init_arg.auto_shutdown_timeout}
   end
 
+  @impl GenServer
   def handle_call(:report_state, _from, state) do
-    {:reply, state, state}
+    {:reply, state, state, state.auto_shutdown_timeout}
   end
 
+  @impl GenServer
   def handle_call(:queue_new_number, _from, state) do
     case State.queue_new_number(state) do
       {:ok, new_number, new_state} ->
-        {:reply, {:ok, new_number}, new_state}
+        {:reply, {:ok, new_number}, new_state, state.auto_shutdown_timeout}
 
       {:error, reason} ->
-        {:reply, {:error, reason}, state}
+        {:reply, {:error, reason}, state, state.auto_shutdown_timeout}
     end
   end
 
+  @impl GenServer
   def handle_call({:serve_next_queued_number, priority_number}, _from, state) do
     case State.serve_next_queued_number(state, priority_number) do
       {:ok, new_number, new_state} ->
-        {:reply, {:ok, new_number}, new_state}
+        {:reply, {:ok, new_number}, new_state, state.auto_shutdown_timeout}
 
       {:error, reason} ->
-        {:reply, {:error, reason}, state}
+        {:reply, {:error, reason}, state, state.auto_shutdown_timeout}
     end
   end
 
+  @impl GenServer
   def handle_call(:reset_state, _from, state) do
     min = state.min_number
     max = state.max_number
@@ -77,6 +82,16 @@ defmodule TakeANumberDeluxe do
 
     {:ok, state} = State.new(min, max, timeout)
 
-    {:reply, :ok, state}
+    {:reply, :ok, state, state.auto_shutdown_timeout}
+  end
+
+  @impl GenServer
+  def handle_info(:timeout, state) do
+    {:stop, :normal, state}
+  end
+
+  @impl GenServer
+  def handle_info(_, state) do
+    {:noreply, state, state.auto_shutdown_timeout}
   end
 end
