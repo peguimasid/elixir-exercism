@@ -4,14 +4,20 @@ defmodule LogParser do
   end
 
   def split_line(line) do
-    # Please implement the split_line/1 function
+    String.split(line, ~r/<[~\*\=\-]*>/)
   end
 
   def remove_artifacts(line) do
-    # Please implement the remove_artifacts/1 function
+    Regex.replace(~r/end-of-line\d+/i, line, "")
   end
 
   def tag_with_user_name(line) do
-    # Please implement the tag_with_user_name/1 function
+    case Regex.run(~r/User\s+(\S+)/, line) do
+      [_, user_name] ->
+        "[USER] #{user_name} #{line}"
+
+      _ ->
+        line
+    end
   end
 end
