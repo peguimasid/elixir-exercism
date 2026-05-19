@@ -1,6 +1,6 @@
 defmodule LogParser do
   def valid_line?(line) do
-    # Please implement the valid_line?/1 function
+    Regex.match?(~r/^\[(INFO|WARNING|ERROR|DEBUG)\]/, line)
   end
 
   def split_line(line) do
