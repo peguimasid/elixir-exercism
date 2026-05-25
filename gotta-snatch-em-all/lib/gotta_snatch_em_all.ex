@@ -4,41 +4,57 @@ defmodule GottaSnatchEmAll do
 
   @spec new_collection(card()) :: collection()
   def new_collection(card) do
-    # Please implement new_collection/1
+    MapSet.new([card])
   end
 
   @spec add_card(card(), collection()) :: {boolean(), collection()}
   def add_card(card, collection) do
-    # Please implement add_card/2
+    {MapSet.member?(collection, card), MapSet.put(collection, card)}
   end
 
   @spec trade_card(card(), card(), collection()) :: {boolean(), collection()}
   def trade_card(your_card, their_card, collection) do
-    # Please implement trade_card/3
+    {
+      not MapSet.member?(collection, their_card) and MapSet.member?(collection, your_card),
+      collection |> MapSet.delete(your_card) |> MapSet.put(their_card)
+    }
   end
 
   @spec remove_duplicates([card()]) :: [card()]
   def remove_duplicates(cards) do
-    # Please implement remove_duplicates/1
+    cards
+    |> MapSet.new()
+    |> MapSet.to_list()
+    |> Enum.sort()
   end
 
   @spec extra_cards(collection(), collection()) :: non_neg_integer()
   def extra_cards(your_collection, their_collection) do
-    # Please implement extra_cards/2
+    MapSet.size(MapSet.difference(your_collection, their_collection))
   end
 
   @spec boring_cards([collection()]) :: [card()]
-  def boring_cards(collections) do
-    # Please implement boring_cards/1
+  def boring_cards(collections) when collections != [] do
+    collections
+    |> Enum.reduce(&MapSet.intersection/2)
+    |> MapSet.to_list()
+    |> Enum.sort()
   end
+
+  def boring_cards([]), do: []
 
   @spec total_cards([collection()]) :: non_neg_integer()
   def total_cards(collections) do
-    # Please implement total_cards/1
+    collections
+    |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+    |> MapSet.size()
   end
 
   @spec split_shiny_cards(collection()) :: {[card()], [card()]}
   def split_shiny_cards(collection) do
-    # Please implement split_shiny_cards/1
+    collection
+    |> MapSet.to_list()
+    |> Enum.sort()
+    |> Enum.split_with(&String.starts_with?(&1, "Shiny"))
   end
 end
