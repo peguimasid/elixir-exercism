@@ -3,11 +3,16 @@ defmodule CircularBuffer do
   An API to a stateful process that fills and empties a circular buffer
   """
 
+  use GenServer
+
+  # === Client API ===
+
   @doc """
   Create a new buffer of a given capacity
   """
   @spec new(capacity :: integer) :: {:ok, pid}
   def new(capacity) do
+    GenServer.start_link(__MODULE__, capacity)
   end
 
   @doc """
@@ -15,6 +20,7 @@ defmodule CircularBuffer do
   """
   @spec read(buffer :: pid) :: {:ok, any} | {:error, atom}
   def read(buffer) do
+    GenServer.call(buffer, :read)
   end
 
   @doc """
@@ -22,6 +28,7 @@ defmodule CircularBuffer do
   """
   @spec write(buffer :: pid, item :: any) :: :ok | {:error, atom}
   def write(buffer, item) do
+    GenServer.call(buffer, {:write, item})
   end
 
   @doc """
@@ -29,6 +36,7 @@ defmodule CircularBuffer do
   """
   @spec overwrite(buffer :: pid, item :: any) :: :ok
   def overwrite(buffer, item) do
+    GenServer.call(buffer, {:overwrite, item})
   end
 
   @doc """
@@ -36,5 +44,55 @@ defmodule CircularBuffer do
   """
   @spec clear(buffer :: pid) :: :ok
   def clear(buffer) do
+    GenServer.call(buffer, :clear)
+  end
+
+  # === Server callbacks ===
+
+  @impl true
+  def init(capacity) do
+    state = {[], capacity}
+    {:ok, state}
+  end
+
+  @impl true
+  def handle_call(:read, _, {[], _} = state) do
+    {:reply, {:error, :empty}, state}
+  end
+
+  @impl true
+  def handle_call(:read, _, {[oldest | rest], capacity}) do
+    state = {rest, capacity}
+    {:reply, {:ok, oldest}, state}
+  end
+
+  @impl true
+  def handle_call({:write, _item}, _, {items, capacity} = state) when length(items) == capacity do
+    {:reply, {:error, :full}, state}
+  end
+
+  @impl true
+  def handle_call({:write, item}, _, {items, capacity}) do
+    state = {items ++ [item], capacity}
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:overwrite, item}, _, {items, capacity}) when length(items) == capacity do
+    [_oldest | rest] = items
+    state = {rest ++ [item], capacity}
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:overwrite, item}, _, {items, capacity}) do
+    state = {items ++ [item], capacity}
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call(:clear, _, {_items, capacity}) do
+    state = {[], capacity}
+    {:reply, :ok, state}
   end
 end
