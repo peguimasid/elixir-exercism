@@ -56,27 +56,28 @@ defmodule CircularBuffer do
   end
 
   @impl true
-  def handle_call(:read, _, {[], _} = state) do
+  def handle_call(:read, _from, {[], _} = state) do
     {:reply, {:error, :empty}, state}
   end
 
-  def handle_call(:read, _, {[oldest | rest], capacity}) do
+  def handle_call(:read, _from, {[oldest | rest], capacity}) do
     state = {rest, capacity}
     {:reply, {:ok, oldest}, state}
   end
 
-  def handle_call({:write, _item}, _, {items, capacity} = state) when length(items) == capacity do
+  def handle_call({:write, _item}, _from, {items, capacity} = state)
+      when length(items) == capacity do
     {:reply, {:error, :full}, state}
   end
 
-  def handle_call({:write, item}, _, {items, capacity}) do
+  def handle_call({:write, item}, _from, {items, capacity}) do
     state = {items ++ [item], capacity}
     {:reply, :ok, state}
   end
 
   @impl true
-  def handle_cast({:overwrite, item}, {items, capacity}) when length(items) == capacity do
-    [_oldest | rest] = items
+  def handle_cast({:overwrite, item}, {[_oldest | rest] = items, capacity})
+      when length(items) == capacity do
     state = {rest ++ [item], capacity}
     {:noreply, state}
   end
