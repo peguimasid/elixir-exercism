@@ -36,7 +36,7 @@ defmodule CircularBuffer do
   """
   @spec overwrite(buffer :: pid, item :: any) :: :ok
   def overwrite(buffer, item) do
-    GenServer.call(buffer, {:overwrite, item})
+    GenServer.cast(buffer, {:overwrite, item})
   end
 
   @doc """
@@ -44,7 +44,7 @@ defmodule CircularBuffer do
   """
   @spec clear(buffer :: pid) :: :ok
   def clear(buffer) do
-    GenServer.call(buffer, :clear)
+    GenServer.cast(buffer, :clear)
   end
 
   # === Server callbacks ===
@@ -78,21 +78,21 @@ defmodule CircularBuffer do
   end
 
   @impl true
-  def handle_call({:overwrite, item}, _, {items, capacity}) when length(items) == capacity do
+  def handle_cast({:overwrite, item}, {items, capacity}) when length(items) == capacity do
     [_oldest | rest] = items
     state = {rest ++ [item], capacity}
-    {:reply, :ok, state}
+    {:noreply, state}
   end
 
   @impl true
-  def handle_call({:overwrite, item}, _, {items, capacity}) do
+  def handle_cast({:overwrite, item}, {items, capacity}) do
     state = {items ++ [item], capacity}
-    {:reply, :ok, state}
+    {:noreply, state}
   end
 
   @impl true
-  def handle_call(:clear, _, {_items, capacity}) do
+  def handle_cast(:clear, {_items, capacity}) do
     state = {[], capacity}
-    {:reply, :ok, state}
+    {:noreply, state}
   end
 end
